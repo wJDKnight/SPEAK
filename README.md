@@ -1,16 +1,19 @@
-# LLMiniST
+# SPEAK
+
+**SPEAK**: Spatial Prompting with Expert Aligned Knowledge for Tissue Domain Identification in Spatial Transcriptomics
 
 This repository contains a collection of tools and scripts for identifying spatial microenvironments (niches) in spatial transcriptomics data using Large Language Models (LLMs). The project supports zero-shot and fine-tuned approaches for multiple spatial transcriptomics platforms including STARmap, MERFISH, and Visium.
 
 ## Overview
+![workflow](example_data/fig1_new_withHC.png)
 
-LLMiniST leverages the power of Large Language Models to analyze spatial transcriptomics data and identify cellular microenvironments. The framework processes neighborhood information around each cell, including cell type compositions and gene expression patterns, to predict spatial niches using natural language prompts.
+SPEAK leverages the power of Large Language Models to analyze spatial transcriptomics data and identify cellular microenvironments. The framework processes neighborhood information around each cell, including cell type compositions and gene expression patterns, to predict spatial niches using natural language prompts.
 
 ## Usage
 
 ### Quick Start
 
-The easiest way to get started with LLMiniST is through the interactive Jupyter notebook:
+The easiest way to get started with SPEAK is through the interactive Jupyter notebook:
 
 1. **Open the notebook**: Launch `zeroshot_notebook.ipynb` in your Jupyter environment
 2. **Configure your analysis**: Set up your data paths and model parameters in the configuration
