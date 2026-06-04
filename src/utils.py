@@ -972,3 +972,91 @@ def process_batch_results(config, n_batch=1, extract_function=None):
             print(f"Error processing batch {i}: {e}")
     
     return gpt_results_df
+
+
+
+
+def create_prediction(df, p, ground_truth_name='ground_truth', random_state=42):
+    """
+    Create prediction column based on randomly sampling proportion p of data.
+    
+    Parameters:
+    -----------
+    df : pandas.DataFrame
+        DataFrame containing 'cluster' and ground_truth_name columns
+    p : float
+        Proportion of data to randomly sample (between 0 and 1)
+    random_state : int
+        Random seed for reproducibility
+        
+    Returns:
+    --------
+    pandas.DataFrame
+        DataFrame with new 'prediction' column
+    """
+    # Make a copy to avoid modifying original dataframe
+    df_result = df.copy()
+    
+    # Set random seed for reproducibility
+    np.random.seed(random_state)
+    
+    # Randomly sample proportion p from each cluster
+    sampled_indices = []
+    for cluster_id in df['cluster'].unique():
+        if pd.isna(cluster_id):
+            continue
+        cluster_data = df[df['cluster'] == cluster_id]
+        cluster_sample_size = int(round(len(cluster_data) * p))
+        if cluster_sample_size > 0:
+            cluster_sampled_indices = np.random.choice(
+                cluster_data.index, 
+                size=min(cluster_sample_size, len(cluster_data)), 
+                replace=False
+            )
+            sampled_indices.extend(cluster_sampled_indices)
+        else:
+            cluster_sample_size = 1
+            cluster_sampled_indices = np.random.choice(
+                cluster_data.index, 
+                size=min(cluster_sample_size, len(cluster_data)), 
+                replace=False
+            )
+            sampled_indices.extend(cluster_sampled_indices)
+
+    
+    sampled_df = df.loc[sampled_indices]
+    
+    print(f"Original dataset size: {len(df)}")
+    print(f"Total sample size (p={p} from each cluster): {len(sampled_indices)}")
+    
+    # Group by cluster and find majority ground_truth for each cluster
+    cluster_to_prediction = {}
+    
+    for cluster_id in sampled_df['cluster'].unique():
+        if pd.isna(cluster_id):
+            continue
+        cluster_data = sampled_df[sampled_df['cluster'] == cluster_id]
+        
+        # Count occurrences of each ground_truth in this cluster
+        ground_truth_counts = cluster_data[ground_truth_name].value_counts()
+        
+        # Get the majority ground_truth (most frequent)
+        majority_ground_truth = ground_truth_counts.index[0]
+        
+        cluster_to_prediction[cluster_id] = majority_ground_truth
+        
+        print(f"Cluster {cluster_id}: {len(cluster_data)} samples, "
+              f"majority ground_truth = {majority_ground_truth} "
+              f"(count: {ground_truth_counts.iloc[0]}/{len(cluster_data)})")
+    
+    # Map all rows' cluster to prediction_BASS based on the mapping
+    df_result['prediction'] = df_result['cluster'].map(cluster_to_prediction)
+    
+    # Handle any clusters that weren't in the sample (assign NaN or most common prediction)
+    missing_clusters = df_result[df_result['prediction'].isna()]['cluster'].unique()
+    if len(missing_clusters) > 0:
+        print(f"Warning: {len(missing_clusters)} clusters not found in sample: {missing_clusters}")
+        # You could assign the most common prediction or leave as NaN
+        # For now, we'll leave as NaN
+    
+    return df_result

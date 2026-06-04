@@ -79,6 +79,9 @@ def load_spatial_data_csv(
     
     print(f"Loading main data from: {main_file_path}")
     adata = sc.read_csv(main_file_path, first_column_names=first_column_names)
+
+    # Add cell ID to adata.obs
+    adata.obs['cell_id'] = adata.obs_names
     
     # Initialize list to store metadata DataFrames
     metadata_dfs = []
@@ -150,9 +153,7 @@ def load_spatial_data_csv(
         if valid_metadata_dfs:
             adata.obs = adata.obs.join(valid_metadata_dfs)
     
-    # Clean cell IDs to save tokens (convert to simple integer strings)
-    adata.obs_names = list(range(len(adata)))
-    adata.obs_names = adata.obs_names.astype(str)
+    
     
     print(f"Data loading complete. Shape: {adata.shape}")
     print(f"Observations (cells): {adata.n_obs}")
