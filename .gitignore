@@ -1,3 +1,58 @@
+# Operating-system, editor, and language caches
 .DS_Store
-/__pycache__/
-src/__pycache__/
+.ipynb_checkpoints/
+__pycache__/
+.pytest_cache/
+*.egg-info/
+*.out
+.Rproj.user/
+.Rhistory
+
+# Credentials and author-local files
+.env
+servers.txt
+metric_comparison_tables.docx
+
+# Generated run outputs at the repository root
+/batch_json/
+/batch_results/
+/gemini_results/
+/diagnosis/
+/deconv_result/
+/finetune_json/
+/gpt4omini_results/
+/outs/
+/test_p_results/
+/finetune_results/
+/all_results/
+/MERFISH_data/
+/conserved_json/
+/twostage_results/
+/figures/
+/tables/
+/gpt4o_results/
+/llama_results/
+/deepseek_results/
+/starmap_gene/
+/localllm_results/
+/IRIS_Seurat_results/
+/figure_PCA_r/
+/local_llm/
+/data/
+
+# Author-local helper files
+/test_domain_batchid.txt
+/data.json
+/plot_training_log.py
+/get_gene_list_visiumHDmouse.R
+/my_vllm_infer.py
+/plot_geojson_example.ipynb
+
+# Full paper data are distributed through Figshare. These paths are populated
+# only after downloading the deposited data package; the compact STARmap
+# example and small source-data tables remain versioned in this repository.
+/examples/visium_libd/
+/examples/merfish/
+/examples/copd/
+/examples/results/
+/examples/intermediates/

@@ -1,0 +1,4 @@
+data_type,reference_runtime_seconds,provenance
+STARmap,300,reported LLM runtime reference used by plot_runtime.ipynb
+Visium,1500,reported LLM runtime reference used by plot_runtime.ipynb
+MERFISH,1500,reported LLM runtime reference used by plot_runtime.ipynb

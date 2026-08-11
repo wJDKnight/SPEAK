@@ -3,7 +3,7 @@ import pandas as pd
 import os
 import re
 import time
-from utils import check_batch_status, load_config
+from .utils import check_batch_status, load_config
 
 # get the path of config file from the command line
 import sys
@@ -13,8 +13,7 @@ config = load_config(config_path)
 # when read the general config file, the data_name may be specified in the command line
 if len(sys.argv) > 2:
     config.data_name = sys.argv[2]
-    config.folder_path = f"./batch_json/{config.data_name}_{config.model_type}"
-    config.output_path = f"./batch_results/{config.data_name}_{config.model_type}"
+    config.refresh_paths()
     if len(sys.argv) > 3:
         config.replicate = sys.argv[3]
 
@@ -82,10 +81,10 @@ for filename in os.listdir(config.folder_path):
             # create a txt file named with config.data_name+ config.replicate + time. if the file exists, open it and add batch id as a new line in the end of it. 
             timestamp = time.strftime("%Y%m%d_%H")
             batch_id_file = f"outs/{config.data_name}{config.replicate}_{timestamp}.txt"
-            
+            os.makedirs("outs", exist_ok=True)
+
             # Open file in append mode ('a') - creates file if it doesn't exist
             with open(batch_id_file, 'a') as f:
                 f.write(f"{batch_id}\n")
-            
+
             print(f"Batch ID {batch_id} saved to {batch_id_file}")
-            

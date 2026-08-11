@@ -1,0 +1,20 @@
+data_name: "151673"
+r: 200
+name_truth: "layer_guess"
+tissue_region: "Human dorsolateral prefrontal cortex"
+model_type: "finetuneTest_end2end"
+openai_url: "/v1/chat/completions"
+use_full_name: false
+with_self_type: false
+with_region_name: true
+Graph_type: "deconv"
+with_negatives: false
+with_CoT: false
+minimal_f: 0.05  # this should adjust according to the neighbor_count
+top_n: 7  # this should adjust according to the neighbor_count and number of cell types
+with_numbers: false
+with_domain_name: true
+gpt_model: "ft:gpt-4o-mini-2024-07-18:personal::AKeUzM35"
+oneshot_prompt: ""  # this should be assigned when running the jupyter notebook
+system_prompt: ""  # Added this line
+output_type: "niche"

@@ -1,0 +1,19 @@
+data_name: "BZ5"
+r: 850
+replicate: _testR850
+name_truth: "niche_truth"
+tissue_region: "mPFC region of mice"
+model_type: "finetune_BZ5"
+openai_url: "/v1/chat/completions"
+use_full_name: false
+with_self_type: true
+with_region_name: true
+Graph_type: "count"
+with_negatives: false
+with_CoT: false
+minimal_f: 0  
+top_n: 99 
+with_numbers: false
+with_domain_name: true
+gpt_model: "ft:gpt-4o-mini-2024-07-18:whh:bz5-0-3-r850:ATMSM7pj"
+output_type: "niche"

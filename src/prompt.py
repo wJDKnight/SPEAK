@@ -13,12 +13,16 @@ def zeroshot_geneorder(df, rows, config):
     """
     df = df.copy()
     strings_list = []
+    # if i is a int, convert it to a list
+    if isinstance(rows, int):
+        rows = [rows]
+
     for i in rows:
         row = df.iloc[i]
-        
+
         # Sort cell types by count in descending order
         sorted_cells = row.sort_values(ascending=False)[:config.top_n]
-        
+
         one_frequency = []
         for gene_name, expression in sorted_cells.items():
             if expression <= config.minimal_f:
@@ -28,18 +32,18 @@ def zeroshot_geneorder(df, rows, config):
                 one_frequency.append(f"{gene_name}: {expression}")
             else:
                 one_frequency.append(f"{gene_name}")
-        
+
         one_frequency = ", ".join(one_frequency)
         strings_list.append(f"{{{one_frequency}}}")
-    
+
     multi_rows_strings = ";\n ".join(strings_list)
-    
+
     if config.output_type == "niche":
         result = f"""You will be provided with a list of marker genes expressed in the neighborhood of a cell.{config.region1} \
 The genes are ordered from highest expression to lowest expression.{config.text_expression_numbers} \
 Your task is to identify the microenvironments the cell belong to. Consider the possiblily existing cell types in the neighborhood based on the marker genes.  \
 Each cell can only belong to one of the {len(config.domain_mapping)} microenvironments: {', '.join(config.domain_mapping.values())}. \
-Only output the most possible microenvironment in the plain text format like this: Outputs: {{'microenvironment 1'}} \
+Only output the most possible microenvironment in json format like this: {{\"microenvironment\": \"{list(config.domain_mapping.values())[0]}\"}} \
 Below are the list of marker genes in the cell's neighborhood:\n{multi_rows_strings}\n"""
     elif config.output_type == "celltype":
         result = f"""In spatial transcriptomic data, one spot contains few cells. \
@@ -59,14 +63,17 @@ def zeroshot_celltype(df, rows, config):
     df = df.copy()
     strings_list = []
     negatives = ""
+    if isinstance(rows, int):
+        rows = [rows]
+
     for i in rows:
         row = df.iloc[i]
-        
+
         # Sort cell types by count in descending order
         sorted_cells = row.sort_values(ascending=False)[:config.top_n]
-        
+
         one_frequency = []
-        
+
         # Iterate over sorted cell types
         for cell_type, count in sorted_cells.items():
             if count <= config.minimal_f:
@@ -80,7 +87,7 @@ def zeroshot_celltype(df, rows, config):
                 one_frequency.append(f"{cellname}: {count}")
             else:
                 one_frequency.append(f"{cellname}")
-        
+
         one_frequency = ", ".join(one_frequency)
         strings_list.append(f"{{{one_frequency}}}")
 
@@ -97,7 +104,7 @@ Below are the cell's neighbor cell-types.\n """
     if config.confident_output:
         result += f" {multi_rows_strings}\n  Output the most possible microenvironment and a confidence score about how confident the prediction is. Output plain text like this:  ['microenvironment 1': 'confidence score']"
     else:
-        result += f" {multi_rows_strings}\n  Only output the most possible microenvironment in the plain text like this: Outputs: {{'microenvironment 1'}} "
+        result += f" {multi_rows_strings}\n  Only output the most possible microenvironment in json format like this: {{\"microenvironment\": \"{list(config.domain_mapping.values())[0]}\"}} "
 
     return(result)
 
@@ -106,6 +113,9 @@ def zeroshot_celltype_geneorder(df_cell, df_gene, rows, config):
     df_cell = df_cell.copy()
     df_gene = df_gene.copy()
     strings_list = []
+    if isinstance(rows, int):
+        rows = [rows]
+
     for i in rows:
         cell_row = df_cell.iloc[i]
         gene_row = df_gene.iloc[i]
@@ -127,7 +137,7 @@ def zeroshot_celltype_geneorder(df_cell, df_gene, rows, config):
             else:
                 cell_frequency.append(f"{cell_name}")
         cell_frequency = ", ".join(cell_frequency)
-        
+
         gene_frequency = []
         for gene, count in sorted_genes.items():
             if count <= config.minimal_gene_threshold:
@@ -148,9 +158,9 @@ The Neighbor cell-types are ordered from most frequent to least frequent.{config
 The marker genes are ordered from highest expression to lowest expression.{config.text_expression_numbers} \
 Your task is to identify the microenvironments the cell belong to. \
 The cell can only belong to one of the {len(config.domain_mapping)} microenvironments: {', '.join(config.domain_mapping.values())}. \
-Only output the most possible microenvironment in the plain text format like this: Outputs: {{'microenvironment 1'}} \
+Only output the most possible microenvironment in json format like this: {{\"microenvironment\": \"{list(config.domain_mapping.values())[0]}\"}} \
 Below are the list of cell-types and marker genes in the cell's neighborhood:\n{multi_rows_strings}\n"""
-    
+
     return result
 
 
@@ -164,14 +174,14 @@ def CP_geneorder(df, config):
     df = df.copy()
     typical_frequencies = []
     # Select the sample row
-    for niche_id, niche_name in config.domain_mapping.items():
+    for niche_name in df.index:
         row = df.loc[niche_name]
-        
+
         # Sort cell types by count in descending order
         sorted_cells = row.sort_values(ascending=False)[:config.top_n]
-        
+
         one_frequency = []
-        
+
         # Iterate over sorted cell types
         for gene, count in sorted_cells.items():
             if count <= config.minimal_f:
@@ -181,21 +191,21 @@ def CP_geneorder(df, config):
                 one_frequency.append(f"{gene}: {count}")
             else:
                 one_frequency.append(f"{gene}")
-        
+
         one_frequency = ", ".join(one_frequency)
         typical_frequencies.append(f" Microenvironment: {{{niche_name}}}, Marker genes expressed in the neighborhood: {{{one_frequency}}}")
-    
+
     one_shot = ";\n ".join(typical_frequencies)
     # Combine the results
-    result = f"""You will be provided with a list of distinct microenvironments{config.region2}. \
+    result = f"""You will be provided with a list of examples of microenvironments{config.region2}. \
 The cell type marker genes expressed in the neighborhood of those microenvironments will be shown. The genes are ordered from highest expression to lowest expression.{config.text_expression_numbers} \
 Below is the list:\n {one_shot}\n """
     result += f"""Comparing with the provided list, identify which microenvironment category the following cell belongs to. \
 Consider the microenvironment-specific genes of the provided representative cells. \
 The target cell can only be one of the {len(config.domain_mapping)} microenvironments: {', '.join(config.domain_mapping.values())}. \
-Only output the most possible microenvironment in the plain text like this: Outputs: {{'microenvironment 1'}}. \
+Only output the most possible microenvironment in json format like this: {{\"microenvironment\": \"{list(config.domain_mapping.values())[0]}\"}}. \
 Below are genes expressed in the neighborhood of the cell:\n"""
-    
+
     return(result)
 
 
@@ -210,10 +220,10 @@ def oneshot_geneorder(df, rows, config):
     strings_list = []
     for i in rows:
         row = df.iloc[i]
-        
+
         # Sort cell types by count in descending order
         sorted_cells = row.sort_values(ascending=False)[:config.top_n]
-        
+
         one_frequency = []
         for gene_name, expression in sorted_cells.items():
             if expression <= config.minimal_f:
@@ -226,14 +236,14 @@ def oneshot_geneorder(df, rows, config):
 
         one_frequency = ", ".join(one_frequency)
         strings_list.append(f"{{{one_frequency}}}")
-    
+
     multi_rows_strings = ";\n ".join(strings_list)
-    
+
     if config.output_type == "niche":
-        result = f" {multi_rows_strings}\n Please identify the microenvironment category for the cell. Only output the most possible microenvironment in the plain text like this: Outputs: {{'microenvironment 1'}} "
+        result = f" {multi_rows_strings}\n Please identify the microenvironment category for the cell. Only output the most possible microenvironment in json format like this: {{\"microenvironment\": \"{list(config.domain_mapping.values())[0]}\"}} "
     elif config.output_type == "celltype":
         result = f" {multi_rows_strings}\n Please identify the cell types for each spot. Only output the cell types in the plain text like this: Outputs: {{'Cell ID': 'cell_type_1, cell_type_2, ...', 'Cell ID': 'cell_type_1, cell_type_2, ...', ...}} "
-    
+
     return result
 
 
@@ -249,14 +259,14 @@ def CP_celltype(df, config):
     df = df.copy()
     typical_frequencies = []
     # Select the sample row
-    for niche_id, niche_name in config.domain_mapping.items():
+    for niche_name in df.index:
         row = df.loc[niche_name]
-        
+
         # Sort cell types by count in descending order
         sorted_cells = row.sort_values(ascending=False)[:config.top_n]
-        
+
         one_frequency = []
-        
+
         # Iterate over sorted cell types
         for cell_type, count in sorted_cells.items():
             if count <= config.minimal_f:
@@ -270,19 +280,19 @@ def CP_celltype(df, config):
                 one_frequency.append(f"{cell_name}: {count}")
             else:
                 one_frequency.append(f"{cell_name}")
-        
+
         one_frequency = ", ".join(one_frequency)
         typical_frequencies.append(f" Microenvironment: {{{niche_name}}}, Neighbor cell-type: {{{one_frequency}}}")
-    
+
     one_shot = ";\n ".join(typical_frequencies)
     # Combine the results
-    result = f"""You will be provided with a list of distinct microenvironments{config.region2}. \
+    result = f"""You will be provided with a list of examples of microenvironments{config.region2}. \
 The cell types in the neighborhood of those microenvironments will be shown{config.text_frequencies}. \
 The cell types are ordered from most frequent to least frequent.\n Below is the list:\n {one_shot}\n """
     result += f"Based on the provided list, identify which microenvironment category the following cell belongs to. \
 Consider how the different combinations of cell types form microenvironments. \
 The target cell can only be one of the {len(config.domain_mapping)} microenvironments: {', '.join(config.domain_mapping.values())}. \
-Only output the most possible microenvironment in the plain text like this: Outputs: {{'microenvironment 1'}}. \
+Only output the most possible microenvironment in json format like this: {{\"microenvironment\": \"{list(config.domain_mapping.values())[0]}\"}}. \
 Below are cell types in the neighborhood of the cell:\n"
     return(result)
 
@@ -298,10 +308,10 @@ def oneshot_celltype(df, rows, config):
     strings_list = []
     for i in rows:
         row = df.iloc[i]
-        
+
         # Sort cell types by count in descending order
         sorted_cells = row.sort_values(ascending=False)[:config.top_n]
-        
+
         one_frequency = []
         for cell_type, count in sorted_cells.items():
             if config.use_full_name:
@@ -318,12 +328,12 @@ def oneshot_celltype(df, rows, config):
 
         one_frequency = ", ".join(one_frequency)
         strings_list.append(f"{{{one_frequency}}}")
-    
-    multi_rows_strings = ";\n ".join(strings_list)
-    
 
-    result = f" {multi_rows_strings}\n Please identify the microenvironment category for each cell. Only output the most possible microenvironment in the plain text like this: Outputs: {{'microenvironment 1'}} "
-    
+    multi_rows_strings = ";\n ".join(strings_list)
+
+
+    result = f" {multi_rows_strings}\n Please identify the microenvironment category for each cell. Only output the most possible microenvironment in json format like this: {{\"microenvironment\": \"{list(config.domain_mapping.values())[0]}\"}} "
+
     return result
 
 
@@ -332,7 +342,7 @@ def CP_celltype_geneorder(df, config):
     df_cell = df[config.cell_names].copy()
     df_gene = df[config.gene_names].copy()
     typical_frequencies = []
-    for niche_id, niche_name in config.domain_mapping.items():
+    for niche_name in df_cell.index:
         row_cell = df_cell.loc[niche_name]
         row_gene = df_gene.loc[niche_name]
 
@@ -355,7 +365,7 @@ def CP_celltype_geneorder(df, config):
             else:
                 cell_frequency.append(f"{cell_name}")
         cell_frequency = ", ".join(cell_frequency)
-        
+
         gene_frequency = []
         for gene, count in sorted_genes.items():
             if count <= config.minimal_gene_threshold:
@@ -370,14 +380,14 @@ def CP_celltype_geneorder(df, config):
         typical_frequencies.append(f"Microenvironment: {{{niche_name}}}, Neighbor cell-types: {{{cell_frequency}}}, marker genes: {{{gene_frequency}}}")
 
     one_shot = ";\n ".join(typical_frequencies)
-    result = f"""You will be provided with a list of tissue microenvironments{config.region2}. \
+    result = f"""You will be provided with a list of examples of tissue microenvironments{config.region2}. \
 The cell types and marker genes in the neighborhood of those microenvironments will be shown. \
 The neighbor cell-types are ordered from most frequent to least frequent.{config.text_frequencies} \
 The genes are ordered from highest expression to lowest expression.{config.text_expression_numbers} \
 \n Below are typical examples of microenvironments:\n {one_shot} \n"""
     result += f"Based on the examples, identify which microenvironment categories the following cell belongs to. \
 The target cell can only be one of the {len(config.domain_mapping)} microenvironments: {', '.join(config.domain_mapping.values())}. \
-Only output the most possible microenvironment in the plain text like this: Outputs: {{'microenvironment 1'}}. \
+Only output the most possible microenvironment in json format like this: {{\"microenvironment\": \"{list(config.domain_mapping.values())[0]}\"}}. \
 Below are cell types and marker genes in the neighborhood of the cell:\n"
     return(result)
 
@@ -408,7 +418,7 @@ def oneshot_celltype_geneorder(df_cell, df_gene, rows, config):
             else:
                 cell_frequency.append(f"{cell_name}")
         cell_frequency = ", ".join(cell_frequency)
-        
+
         gene_frequency = []
         for gene, count in sorted_genes.items():
             if count <= config.minimal_gene_threshold:
@@ -436,8 +446,8 @@ def finetune_system_deconv(config):
 Cell types are ordered from most frequent to least frequent.{config.text_frequencies}{config.region1} \
 You should consider how different combinations of cell types form microenvironments. \
 The target cell can only be one of the {len(config.domain_mapping)} microenvironments: {', '.join(config.domain_mapping.values())}. \
-Only output the most possible microenvironment in the plain text like this: Outputs: {{'microenvironment'}} \
-Below are the cell's neighbor cell-types:\n 
+Only output the most possible microenvironment in json format like this: {{\"microenvironment\": \"{list(config.domain_mapping.values())[0]}\"}} \
+Below are the cell's neighbor cell-types:\n
 """
 
 
@@ -475,20 +485,73 @@ def finetune_assistant(df, i, niche_df):
         i = i[0]
     id = df.index[i]
     niche = niche_df.loc[id]
-    return f"Outputs: {{'{niche}'}}"
+    return f"{{\"microenvironment\": \"{niche}\"}}"
+
+
+
+def finetune_user_celltype(df_cell, i, config):
+    """
+    df_cell: the dataframe of neighbor_matrix
+    """
+    df_cell = df_cell.copy()
+    if isinstance(i, list):
+        i = i[0]
+
+    row_cell = df_cell.iloc[i]
+    sorted_cells = row_cell.sort_values(ascending=False)[:config.top_n]
+
+    cell_frequency = []
+        # Iterate over sorted cell types
+    for cell_type, count in sorted_cells.items():
+        if count <= config.minimal_f:
+            continue
+        count = sig_figs(count, 3)
+        if config.use_full_name:
+            cell_name = config.cell_names_mapping[cell_type]
+        else:
+            cell_name = cell_type
+        if config.with_numbers:
+            cell_frequency.append(f"{cell_name}: {count}")
+        else:
+            cell_frequency.append(f"{cell_name}")
+    cell_frequency = ", ".join(cell_frequency)
+
+    return(f"Neighbor cell-types: {{{cell_frequency}}}")
+
+
+def finetune_user_geneorder(df_gene, i, config):
+    """
+    df_gene: the dataframe of neighbor_matrix, with cells in rows and genes in columns
+    """
+    df_gene = df_gene.copy()
+    if isinstance(i, list):
+        i = i[0]
+    row_gene = df_gene.iloc[i]
+    sorted_genes = row_gene.sort_values(ascending=False)[:config.top_n]
+    gene_frequency = []
+    for gene, count in sorted_genes.items():
+        if count <= config.minimal_gene_threshold:
+            continue
+        count = sig_figs(count, 3)
+        if config.with_numbers:
+            gene_frequency.append(f"{gene}: {count}")
+        else:
+            gene_frequency.append(f"{gene}")
+    gene_frequency = ", ".join(gene_frequency)
+    return(f"Marker genes: {{{gene_frequency}}}")
+
 
 def finetune_user_celltype_geneorder(df_cell, df_gene, i, config):
     """
     df_cell: the dataframe of neighbor_matrix, with cells in rows and genes in columns
     df_gene: the dataframe of neighbor_matrix, with cells in rows and genes in columns
-    row: the row of the sparse matrix to be transferred to strings
     """
     df_cell = df_cell.copy()
     df_gene = df_gene.copy()
     if isinstance(i, list):
         i = i[0]
 
-    row_cell = df_cell.iloc[i]  
+    row_cell = df_cell.iloc[i]
     row_gene = df_gene.iloc[i]
     sorted_cells = row_cell.sort_values(ascending=False)[:config.top_n]
     sorted_genes = row_gene.sort_values(ascending=False)[:config.top_n]
@@ -508,7 +571,7 @@ def finetune_user_celltype_geneorder(df_cell, df_gene, i, config):
         else:
             cell_frequency.append(f"{cell_name}")
     cell_frequency = ", ".join(cell_frequency)
-    
+
     gene_frequency = []
     for gene, count in sorted_genes.items():
         if count <= config.minimal_gene_threshold:
@@ -523,7 +586,7 @@ def finetune_user_celltype_geneorder(df_cell, df_gene, i, config):
     negative_text = ""
     if config.with_negatives:
         if config.neg_top_3_genes is not None:
-            # get the least expressed genes 
+            # get the least expressed genes
             least_expressed_genes = row_gene.sort_values(ascending=True)[:config.top_n].index.tolist()
             negative_niche_names = []
             for gene in least_expressed_genes:

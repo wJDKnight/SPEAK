@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "speak"
+version = "0.1.0"
+description = "LLM-assisted annotation of spatial transcriptomic domains"
+readme = "README.md"
+requires-python = ">=3.10,<3.13"
+license = {file = "LICENSE"}
+dependencies = [
+  "anndata==0.10.9",
+  "h5py==3.12.1",
+  "matplotlib==3.9.2",
+  "numpy==1.26.4",
+  "openai==1.51.2",
+  "pandas==2.2.2",
+  "pydantic==2.9.2",
+  "PyYAML==6.0.2",
+  "scanpy==1.10.3",
+  "scikit-learn==1.5.1",
+  "scipy==1.13.1",
+  "seaborn==0.13.2",
+  "tqdm==4.66.5",
+]
+
+[project.optional-dependencies]
+gemini = ["google-generativeai==0.8.3"]
+notebooks = ["ipykernel>=6.29,<7", "jupyterlab>=4.2,<5"]
+local-llm = ["fire>=0.6,<1", "transformers>=4.45,<5"]
+test = ["pytest>=8.2,<9"]
+
+[project.scripts]
+speak-evaluate = "src.cli.evaluate:main"
+speak-validate-release = "src.cli.validate_release:main"
+speak-normalize-notebooks = "src.cli.normalize_notebooks:main"
+speak-smoke-test = "src.cli.smoke_test:main"
+
+[tool.setuptools.packages.find]
+include = ["src*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

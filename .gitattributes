@@ -1,0 +1,20 @@
+* text=auto
+
+*.py text eol=lf
+*.R text eol=lf
+*.r text eol=lf
+*.sh text eol=lf
+*.md text eol=lf
+*.toml text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.ipynb text eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.pdf binary
+*.h5 binary
+*.h5ad binary
+*.rda binary
+*.pkl binary

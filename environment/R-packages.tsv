@@ -1,0 +1,20 @@
+package	version	purpose
+R	4.3.3	runtime
+Seurat	5.2.1	spatial preprocessing and niche analysis
+tidyverse	2.0.0	data manipulation
+readr	2.1.5	CSV input/output
+zellkonverter	1.12.1	H5AD conversion
+patchwork	1.2.0	figure composition
+ggplot2	3.5.2	figures
+VennDiagram	1.7.3	marker overlap figures
+dplyr	1.1.4	data manipulation
+ggalluvial	0.12.5	COPD Sankey plot
+ggrepel	0.9.5	DE plot labels
+clusterProfiler	4.10.1	COPD enrichment analysis
+org.Hs.eg.db	3.18.0	human gene annotation
+enrichplot	1.22.0	enrichment figures
+Matrix	1.6.5	sparse matrices
+aricode	1.0.3	clustering metrics
+dbscan	1.2.2	clustering utilities
+randomcoloR	1.1.0.1	plot colours
+scales	1.4.0	plot scales
